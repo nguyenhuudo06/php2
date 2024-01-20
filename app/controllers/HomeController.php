@@ -11,21 +11,26 @@ class Home extends Controller{
     }
 
     function index(){
-        $detail = $this->model_home->getDetail(0);
-
+        $data = $this->model_home->getList();
+        // $data = $this->model_home->get();
         echo '<pre>';
-        print_r($detail);
+        print_r($data);
         echo '</pre>';
+
     }
 
-    function list_product($id = 0){
-        $detail = $this->model_home->getDetail($id);
+    function list_product(){
+        $detail = $this->model_home->getList();
         $title = 'Trang chu';
 
         $this->data['sub_content']['title'] = $title;
         $this->data['sub_content']['product_list'] = $detail;
         $this->data['content'] = 'home/index';
 
-        $this->render('layouts/client_layout', $this->data);
+        echo '<pre>';
+        print_r($detail);
+        echo '</pre>';
+
+        // $this->render('layouts/client_layout', $this->data);
     }
 }

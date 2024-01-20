@@ -1,16 +1,19 @@
 <?php
 
-class HomeModel {
+class HomeModel extends Model{
 
     protected $_table = 'products';
 
+    function tableFill(){
+        return 'products';
+    }
+
+    function fieldFill(){
+        return '*';
+    }
+
     function getList(){
-        $data = [
-            'Item1',
-            'Item1',
-            'Item1',
-            'Item1',
-        ];
+        $data = $this->db->query("SELECT * FROM $this->_table")->fetchAll(PDO::FETCH_ASSOC);
         return $data;
     }
 

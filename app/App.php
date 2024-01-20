@@ -3,10 +3,13 @@
 class App
 {
     private $__controller, $__action, $__params, $__routes;
+    static public $app;
 
     function __construct()
     {
         global $routes;
+        global $configs;
+        self::$app = $this;
 
         $this->__routes = new Route();
 
@@ -68,6 +71,10 @@ class App
             $this->__controller = ucfirst($this->__controller);
         }
 
+        if(empty($urlcheck)){
+            $urlcheck = $this->__controller;
+        }
+
         if (file_exists('app/controllers/' . ($urlcheck) . 'Controller.php')) {
             require_once 'app/controllers/' . ($urlcheck) . 'Controller.php';
 
@@ -103,8 +110,9 @@ class App
         }
     }
 
-    function loadError($name = '404')
+    function loadError($name = '404', $data = [])
     {
+        extract($data);
         require_once 'app/errors/' . $name . '.php';
     }
 }
