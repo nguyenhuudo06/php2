@@ -2,7 +2,7 @@
 
 abstract class Model extends Database {
     
-    protected $db, $tableName;
+    protected $db;
 
     function __construct()
     {
@@ -11,8 +11,10 @@ abstract class Model extends Database {
 
     abstract function tableFill();
     abstract function fieldFill();
+    abstract function primaryKey();
 
-    public function get(){
+    // Dùng theo cấu hình trực tiếp của model tương ứng - gọi trực tiếp
+    public function all(){
         $tableName = $this->tableFill();
         $fieldSelect = $this->fieldFill();
 
@@ -24,6 +26,23 @@ abstract class Model extends Database {
         $query = $this->db->query($sql);
         if(!empty($query)){
             return $query->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return false;
+    }
+
+    public function find($id){
+        $tableName = $this->tableFill();
+        $fieldSelect = $this->fieldFill();
+        $primaryKey = $this->primaryKey();
+
+        if(empty($fieldSelect)){
+            $fieldSelect = '*';
+        }
+
+        $sql = "SELECT $fieldSelect FROM $tableName WHERE $primaryKey=$id";
+        $query = $this->db->query($sql);
+        if(!empty($query)){
+            return $query->fetch(PDO::FETCH_ASSOC);
         }
         return false;
     }
