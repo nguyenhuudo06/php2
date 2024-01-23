@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -42,7 +40,12 @@
 </style>
 
 <body>
-    <section class="vh-100 bg-image" style="background-image: url('https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp');">
+    <?php
+    // echo '<pre>';
+    // !empty($msg) ?? print_r($msg);
+    // echo '</pre>';
+    ?>
+    <section class="bg-image min-vh-100" style="background-image: url('https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp');">
         <div class="mask d-flex align-items-center h-100 gradient-custom-3">
             <div class="container h-100">
                 <div class="row d-flex justify-content-center align-items-center h-100">
@@ -51,28 +54,32 @@
                             <div class="card-body p-4">
                                 <h2 class="text-center mb-3">Register</h2>
 
-                                <form action="register" method="post">
+                                <form action="<?php echo _WEB_ROOT_ ?>/account/register" method="post">
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example1cg">Your Name</label>
-                                        <input type="text" name="name" id="form3Example1cg" class="form-control form-control-lg" required/>
+                                        <input type="text" name="name" value="<?php echo !empty($old['name']) ? $old['name'] : false ?>" id="form3Example1cg" class="form-control form-control-lg" />
+                                        <?php echo (!empty($errors) && array_key_exists('name', $errors)) ? '<span class="text-danger">'. $errors['name'] . '</span>' : ''; ?>
                                     </div>
-
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example3cg">Your Email</label>
-                                        <input type="email" name="email" placeholder="<?php echo !empty($errors['emailError']) ? $errors['emailError'] : '' ?>" id="form3Example3cg" class="form-control form-control-lg" required/>
+                                        <input type="text" name="email" value="<?php echo !empty($old['email']) ? $old['email'] : false ?>" placeholder="<?php echo !empty($errors['emailError']) ? $errors['emailError'] : '' ?>" id="form3Example3cg" class="form-control form-control-lg" />
+                                        <?php echo (!empty($errors) && array_key_exists('email', $errors)) ? '<span class="text-danger">'. $errors['email'] . '</span>' : ''; ?>
                                     </div>
-
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example4cg">Password</label>
-                                        <input type="password" name="password" id="form3Example4cg" class="form-control form-control-lg" required/>
+                                        <input type="password" name="password" id="form3Example4cg" class="form-control form-control-lg" />
+                                        <?php echo (!empty($errors) && array_key_exists('password', $errors)) ? '<span class="text-danger">'. $errors['password'] . '</span>' : ''; ?>
                                     </div>
-
+                                    <div class="form-outline mb-4">
+                                        <label class="form-label" for="form3Example4cgy">Confirm password</label>
+                                        <input type="password" name="confirm_password" id="form3Example4cgy" class="form-control form-control-lg" />
+                                        <?php echo (!empty($errors) && array_key_exists('confirm_password', $errors)) ? '<span class="text-danger">'. $errors['confirm_password'] . '</span>' : ''; ?>
+                                    </div>
                                     <div class="d-flex justify-content-center">
                                         <button type="submit" class="btn btn-success btn-block btn-lg gradient-custom-4 text-body">Register</button>
                                     </div>
+                                    <p class="text-center text-muted mt-5 mb-0">Have already an account? <a href="<?php echo _WEB_ROOT_ ?>/account/login" class="fw-bold text-body"><u class="text-primary">Login here</u></a></p>
 
-                                    <p class="text-center text-muted mt-5 mb-0">Have already an account? <a href="login" class="fw-bold text-body"><u class="text-primary">Login here</u></a></p>
-                                    
                                 </form>
 
                             </div>

@@ -18,120 +18,157 @@ class Account extends Controller
 
     function login()
     {
-        if (!empty($_SESSION['auth']['id'])) {
-            header("Location: ../home");
-            exit();
-        }
-        if (!empty($_POST)) {
-            $dataLogin = [
-                'email' => $_POST['email'],
-                'password' => $_POST['password'],
-            ];
+        $request = new Request();
+        $response = new Response();
 
-            $userList = $this->model_account->getAccount();
-            $hasAccount = false;
-            foreach ($userList as $user) {
-                if ($user['email'] = $_POST['email'] && password_verify($dataLogin['password'], $user['password'])) {
-                    $hasAccount = true;
-                    break;
-                }
-            }
-            if ($hasAccount) {
-                $this->model_account->getAuthId($dataLogin['email'])['id'];
-                $_SESSION['auth']['id'] = $this->model_account->getAuthId($dataLogin['email'])['id'];
-                header("Location: ../home");
-                exit();
-            } else {
+        if ($request->isPost()) {
+            // Set rules
+            $request->rules([
+                'email' => 'required',
+                'password' => 'required',
+            ]);
 
-                header("Location: ../account/login");
-                exit();
-            }
-        } else {
-            $title = 'Dang nhap';
+            // Set message 
+            $request->message([
+                'email.required' => 'Name is required',
+                'password.required' => 'Email is required',
+            ]);
 
-            $this->data['sub_content']['title'] = $title;
-            $this->data['content'] = 'login';
-
-            $this->render($this->data['content'], $this->data);
-        }
-    }
-    function register()
-    {
-
-        // echo '<pre>';
-        // print_r($userAll);
-        // echo '</pre>';
-
-        if (!empty($_POST)) {
-            $userCheck = $this->model_account->checkAvailable($_POST['email']);
-            if ($userCheck) {
-                $this->data['errors']['emailError'] = 'Email da ton tai';
-                // Điều hướng về trang trước đó
-                $title = 'Dang ky';
-                $this->data['sub_content']['title'] = $title;
-                $this->data['content'] = 'register';
-
-                echo '<pre>';
-                print_r($this->data);
-                echo '</pre>';
+            $validate = $request->validate();
+            if (!$validate) {
+                $this->data['errors'] = $request->errors();
+                $this->data['msg'] = "Error";
+                $this->data['old'] = $request->getFields();
+                $this->data['sub_content']['title'] = 'Login';
+                $this->data['content'] = 'login';
 
                 $this->render($this->data['content'], $this->data);
                 exit();
             } else {
-                $dataImport = [
-                    'name' => $_POST['name'],
-                    'email' => $_POST['email'],
-                    'password' => $_POST['password'],
+                $dataAccount = [
+                    'email' => trim($_POST['email']),
+                    'password' => trim($_POST['password']),
                 ];
 
-                $this->model_account->getRegister('users', $dataImport);
+                $userArr = $this->model_account->get_list()->fetchAll(PDO::FETCH_ASSOC);
 
-                $dataCodes = [
-                    'user_id' => $this->model_account->lastInsertId(),
-                    'activation_code' => bin2hex(random_bytes(20))
-                ];
-
-                var_dump($dataCodes);
-
-                $this->model_account->inserst_activation_code('activation_codes', $dataCodes);
-
-                header("Location: ../home");
-
-
-
-                $mail = new PHPMailer(true);
-                try {
-                    //Server settings
-                    $mail->SMTPDebug = 2;
-                    $mail->isSMTP(); // Sử dụng SMTP để gửi mail
-                    $mail->Host = 'smtp.gmail.com'; // Server SMTP của gmail
-                    $mail->SMTPAuth = true; // Bật xác thực SMTP
-                    $mail->Username = 'nguyenhuudo1206@gmail.com'; // Tài khoản email
-                    $mail->Password = 'xvqylzsz hnjy kazq'; // Mật khẩu ứng dụng ở bước 1 hoặc mật khẩu email
-                    $mail->SMTPSecure = 'ssl'; // Mã hóa SSL
-                    $mail->Port = 465; // Cổng kết nối SMTP là 465
-
-                    //Recipients
-                    $mail->setFrom('nguyenhuudo1206@gmail.com', 'Nguyen Huu Do'); // Địa chỉ email và tên người gửi
-                    $mail->addAddress('nguyenhuudo1206@gmail.com', 'Nguyen Huu Do'); // Địa chỉ mail và tên người nhận
-
-                    //Content
-                    $mail->isHTML(true); // Set email format to HTML
-                    $mail->Subject = 'Ma kich hoat tai khoan'; // Tiêu đề
-                    $mail->Body = $dataCodes['activation_code']; // Nội dung
-
-                    $mail->send();
-                    echo 'Message has been sent';
-                } catch (Exception $e) {
-                    echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+                $checkUser = false;
+                foreach($userArr as $userItem){
+                    if($userItem['email'] == $dataAccount['email'] && password_verify($dataAccount['password'], $userItem['password'])){
+                        echo 'Right';
+                        $checkUser = true;
+                        break;
+                    }
+                }
+                if($checkUser){
+                    
+                    $response->redirect('home');
                 }
             }
+
+        }else{
+            $this->data['sub_content']['title'] = 'Login';
+            $this->data['content'] = 'login';
+    
+            $this->render($this->data['content'], $this->data);
+        }
+
+    }
+
+    function register()
+    {
+        $request = new Request();
+        $response = new Response();
+
+        if ($request->isPost()) {
+            // Set rules
+            $request->rules([
+                'name' => 'required|min:8|max:50',
+                'email' => 'required|email|min:8',
+                'password' => 'required|min:8',
+                'confirm_password' => 'required|min:8|match:password',
+            ]);
+
+            // Set message 
+            $request->message([
+                'name.required' => 'Name is required',
+                'name.min' => 'Name must be greater than 8 characters',
+                'name.max' => 'Name must be less than 50 characters',
+                'email.required' => 'Name must be less than 50 characters',
+                'email.email' => 'Name must be less than 50 characters',
+                'email.min' => 'Name must be greater than 8 characters',
+                'password.required' => 'Name must be less than 50 characters',
+                'password.min' => 'Name must be greater than 8 characters',
+                'confirm_password.required' => 'Name must be less than 50 characters',
+                'confirm_password.min' => 'Name must be greater than 8 characters',
+                'confirm_password.match' => 'Password does not match',
+            ]);
+
+            $validate = $request->validate();
+            if (!$validate) {
+                $this->data['errors'] = $request->errors();
+                $this->data['msg'] = "Error";
+                $this->data['old'] = $request->getFields();
+                $this->data['sub_content']['title'] = 'Register';
+                $this->data['content'] = 'register';
+
+                $this->render($this->data['content'], $this->data);
+                exit();
+            } else {
+                $dataUser = [
+                    'name' => $_POST['name'],
+                    'email' => $_POST['email'],
+                    'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+                ];
+
+                $this->model_account->create_user('users', $dataUser);
+
+                $dataActiveToken = [
+                    'user_id' => $this->model_account->lastInsertId(),
+                    'token' => bin2hex(random_bytes(50)),
+                ];
+
+                // $this->model_account->inserst_activation_code('user_activate_token', $dataActiveToken);
+
+                $response->redirect('account/login');
+            }
         } else {
-            $title = 'Dang ky';
-            $this->data['sub_content']['title'] = $title;
+            $this->data['sub_content']['title'] = 'Register';
             $this->data['content'] = 'register';
 
             $this->render($this->data['content'], $this->data);
         }
+
+
+        // echo '<pre>';
+        // print_r($request->__errors['name']);
+        // echo '</pre>';
+
+        // $mail = new PHPMailer(true);
+        // try {
+        //     //Server settings
+        //     $mail->SMTPDebug = 2;
+        //     $mail->isSMTP(); // Sử dụng SMTP để gửi mail
+        //     $mail->Host = 'smtp.gmail.com'; // Server SMTP của gmail
+        //     $mail->SMTPAuth = true; // Bật xác thực SMTP
+        //     $mail->Username = 'nguyenhuudo1206@gmail.com'; // Tài khoản email
+        //     $mail->Password = 'xvqylzsz hnjy kazq'; // Mật khẩu ứng dụng ở bước 1 hoặc mật khẩu email
+        //     $mail->SMTPSecure = 'ssl'; // Mã hóa SSL
+        //     $mail->Port = 465; // Cổng kết nối SMTP là 465
+
+        //     //Recipients
+        //     $mail->setFrom('nguyenhuudo1206@gmail.com', 'Nguyen Huu Do'); // Địa chỉ email và tên người gửi
+        //     $mail->addAddress('nguyenhuudo1206@gmail.com', 'Nguyen Huu Do'); // Địa chỉ mail và tên người nhận
+
+        //     //Content
+        //     $mail->isHTML(true); // Set email format to HTML
+        //     $mail->Subject = 'Ma kich hoat tai khoan'; // Tiêu đề
+        //     $mail->Body = $dataCodes['activation_code']; // Nội dung
+
+        //     $mail->send();
+        //     echo 'Message has been sent';
+        // } catch (Exception $e) {
+        //     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+        // }
     }
 }

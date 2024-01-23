@@ -49,23 +49,25 @@
                             <div class="card-body p-4">
                                 <h2 class="text-center mb-3">Login</h2>
 
-                                <form action="" method="POST">
+                                <form action="<?php echo _WEB_ROOT_ ?>/account/login" method="POST">
 
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example3cg">Your Email</label>
-                                        <input type="text" name="email" id="form3Example3cg" class="form-control form-control-lg" required/>
+                                        <input type="text" name="email" value="<?php echo !empty($old['email']) ? $old['email'] : false ?>" id="form3Example3cg" class="form-control form-control-lg"/>
+                                        <?php echo (!empty($errors) && array_key_exists('email', $errors)) ? '<span class="text-danger">'. $errors['email'] . '</span>' : ''; ?>
                                     </div>
 
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example4cg">Password</label>
-                                        <input type="password" name="password" id="form3Example4cg" class="form-control form-control-lg" required/>
+                                        <input type="password" name="password" id="form3Example4cg" class="form-control form-control-lg"/>
+                                        <?php echo (!empty($errors) && array_key_exists('password', $errors)) ? '<span class="text-danger">'. $errors['password'] . '</span>' : ''; ?>
                                     </div>
                                     <span><a href="">Fogot your password?</a></span>
                                     <div class="d-flex justify-content-center">
                                         <button type="submit" class="btn btn-success btn-block btn-lg gradient-custom-4 text-body">Login</button>
                                     </div>
     
-                                    <p class="text-center text-muted mt-5 mb-0">Not a member? <a href="register" class="fw-bold text-body"><u class="text-primary">Register</u></a></p>
+                                    <p class="text-center text-muted mt-5 mb-0">Not a member? <a href="<?php echo _WEB_ROOT_ ?>/account/register" class="fw-bold text-body"><u class="text-primary">Register</u></a></p>
                                     
                                 </form>
 

@@ -12,26 +12,16 @@ class AccountModel extends Model{
         return '*';
     }
 
-    function getList(){
-        $data = $this->db->query("SELECT * FROM $this->_table")->fetchAll(PDO::FETCH_ASSOC);
+    function primaryKey(){
+        return 'id';
+    }
+
+    function get_list(){
+        $data = $this->db->query("SELECT * FROM users");
         return $data;
     }
 
-    function checkAvailable($email){
-        $data = $this->db->query("SELECT * FROM $this->_table WHERE email = '$email'")->fetch(PDO::FETCH_ASSOC);
-        return $data;
-    }
-
-    function getAuthId($email){
-        return $this->db->query("SELECT id FROM users WHERE users.email = '$email'")->fetch(PDO::FETCH_ASSOC);
-    }
-
-    function getAccount(){
-        $data = $this->db->query("SELECT * FROM $this->_table")->fetchAll(PDO::FETCH_ASSOC);
-        return $data;
-    }
-
-    function getRegister($table, $data){
+    function create_user($table, $data){
         $this->db->insert($table, $data);
     }
 
