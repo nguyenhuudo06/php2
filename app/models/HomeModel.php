@@ -23,19 +23,8 @@ class HomeModel extends Model{
     // Trực tiếp theo các hàm thiết đặt ở trên: Dùng theo cấu hình trực tiếp của model tương ứng - gọi trực tiếp
 
     function getList(){
-        // $data = $this->find(35);
         $data = $this->db->query("SELECT * FROM products");
         return $data;
-    }
-
-    function getDetail($id){
-        $data = [
-            'Item1',
-            'Item2',
-            'Item3',
-            'Item4',
-        ];
-        return $data[$id];
     }
 
     function ttt(){

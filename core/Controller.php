@@ -21,4 +21,8 @@ class Controller {
             require_once _DIR_ROOT_ . '/app/views/' . $view . '.php';
         }
     }
+
+    function isLoggedIn(){
+        return !empty($_SESSION['auth']) ? $_SESSION['auth'] : false;
+    }
 }

@@ -3,28 +3,27 @@
 class Home extends Controller
 {
 
-    public $model_home;
+    public $model;
     public $data = [];
 
     function __construct()
     {
-        $this->model_home = $this->model('HomeModel');
+        $this->model = $this->model('HomeModel');
     }
 
     function index()
     {
-        // Dùng model tương ứng
-        $data = $this->model_home->getList();
-        // Dùng trực tiếp core model
-        // $data = $this->model_home->get();
-        echo '<pre>';
-        print_r($data);
-        echo '</pre>';
+        $list = $this->model->getList()->fetchAll(PDO::FETCH_ASSOC);
+        $this->data['sub_content']['title'] = 'Home';
+        $this->data['sub_content']['lists'] = $list;
+        $this->data['content'] = 'home\index';
+
+        $this->render('layouts/client_layout', $this->data);
     }
 
     function list_product()
     {
-        $detail = $this->model_home->getList()->fetchAll(PDO::FETCH_ASSOC);
+        $detail = $this->model->getList()->fetchAll(PDO::FETCH_ASSOC);
         $title = 'Trang chu';
 
         $this->data['sub_content']['title'] = $title;
@@ -40,7 +39,7 @@ class Home extends Controller
 
     function getListProduct()
     {
-        $data = $this->model_home->ttt();
+        $data = $this->model->ttt();
         echo '<pre>';
         print_r($data);
         echo '</pre>';

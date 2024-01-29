@@ -52,27 +52,20 @@ class Account extends Controller
 
                 $userArr = $this->model_account->get_list()->fetchAll(PDO::FETCH_ASSOC);
 
-                $checkUser = false;
-                foreach($userArr as $userItem){
-                    if($userItem['email'] == $dataAccount['email'] && password_verify($dataAccount['password'], $userItem['password'])){
-                        echo 'Right';
-                        $checkUser = true;
+                foreach ($userArr as $userItem) {
+                    if ($userItem['email'] == $dataAccount['email'] && password_verify($dataAccount['password'], $userItem['password'])) {
+                        $_SESSION['auth'] = $userItem['id'];
+                        $response->redirect('home');
                         break;
                     }
                 }
-                if($checkUser){
-                    
-                    $response->redirect('home');
-                }
             }
-
-        }else{
+        } else {
             $this->data['sub_content']['title'] = 'Login';
             $this->data['content'] = 'login';
-    
+
             $this->render($this->data['content'], $this->data);
         }
-
     }
 
     function register()
@@ -128,7 +121,7 @@ class Account extends Controller
                     'token' => bin2hex(random_bytes(50)),
                 ];
 
-                // $this->model_account->inserst_activation_code('user_activate_token', $dataActiveToken);
+                // $this->model_account->inserst('user_activate_tokens', $dataActiveToken);
 
                 $response->redirect('account/login');
             }
@@ -138,11 +131,6 @@ class Account extends Controller
 
             $this->render($this->data['content'], $this->data);
         }
-
-
-        // echo '<pre>';
-        // print_r($request->__errors['name']);
-        // echo '</pre>';
 
         // $mail = new PHPMailer(true);
         // try {
@@ -170,5 +158,162 @@ class Account extends Controller
         // } catch (Exception $e) {
         //     echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
         // }
+    }
+
+    function change_password()
+    {
+        $request = new Request();
+        $response = new Response();
+
+        if ($request->isPost()) {
+            // Set rules
+            $request->rules([
+                'email' => 'required|email|min:8',
+                'password' => 'required|min:8',
+                'confirm_password' => 'required|min:8|match:password',
+                'token' => 'required',
+            ]);
+
+            // Set message 
+            $request->message([
+                'email.required' => 'Name must be less than 50 characters',
+                'email.email' => 'Name must be less than 50 characters',
+                'email.min' => 'Name must be greater than 8 characters',
+                'password.required' => 'Name must be less than 50 characters',
+                'password.min' => 'Name must be greater than 8 characters',
+                'confirm_password.required' => 'Name must be less than 50 characters',
+                'confirm_password.min' => 'Name must be greater than 8 characters',
+                'confirm_password.match' => 'Password does not match',
+                'token.required' => 'Password is required',
+            ]);
+
+            $validate = $request->validate();
+            if (!$validate) {
+                $this->data['errors'] = $request->errors();
+                $this->data['msg'] = "Error";
+                $this->data['old'] = $request->getFields();
+                $this->data['sub_content']['title'] = 'Change password';
+                $this->data['content'] = 'change_password';
+
+                $this->render($this->data['content'], $this->data);
+                exit();
+            } else {
+                $dataUser = [
+                    'email' => $_POST['email'],
+                    'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
+                    'token' => $_POST['token'],
+                ];
+
+                $this->model_account->change_password($dataUser['password'], $dataUser['token']);
+
+                $response->redirect('account/login');
+            }
+        } else {
+            $this->data['sub_content']['title'] = 'Change password';
+            $this->data['content'] = 'change_password';
+
+            $this->render($this->data['content'], $this->data);
+        }
+    }
+
+    function logout()
+    {
+        // Hủy bỏ session để đăng xuất
+        session_unset();
+        session_destroy();
+
+        $response = new Response();
+        $response->redirect('account/login');
+        exit();
+    }
+
+    function forget()
+    {
+        $request = new Request();
+        $response = new Response();
+
+        if ($request->isPost()) {
+            // Set rules
+            $request->rules([
+                'email' => 'required',
+            ]);
+
+            // Set message 
+            $request->message([
+                'email.required' => 'Email is required',
+            ]);
+
+            $validate = $request->validate();
+            if (!$validate) {
+                $this->data['errors'] = $request->errors();
+                $this->data['msg'] = "Error";
+                $this->data['old'] = $request->getFields();
+                $this->data['sub_content']['title'] = 'Forget';
+                $this->data['content'] = 'forget';
+
+                $this->render($this->data['content'], $this->data);
+                exit();
+            } else {
+                $dataFoget = [
+                    'email' => trim($_POST['email']),
+                ];
+
+                $data = $this->model_account->find_email($dataFoget['email']);
+
+                if ($data) {
+                    $dataFogetToken = [
+                        'user_id' => $data['id'],
+                        'token' => bin2hex(random_bytes(50)),
+                    ];
+
+                    $this->model_account->inserst_remove_uplicate('password_reset_tokens', $dataFogetToken);
+                    $result = $this->model_account->get_token('password_reset_tokens', $dataFogetToken['user_id']);
+
+                    $mail = new PHPMailer(true);
+                    try {
+                        //Server settings
+                        $mail->SMTPDebug = 2;
+                        $mail->isSMTP(); // Sử dụng SMTP để gửi mail
+                        $mail->Host = 'smtp.gmail.com'; // Server SMTP của gmail
+                        $mail->SMTPAuth = true; // Bật xác thực SMTP
+                        $mail->Username = 'nguyenhuudo1206@gmail.com'; // Tài khoản email
+                        $mail->Password = 'xvqylzsz hnjy kazq'; // Mật khẩu ứng dụng ở bước 1 hoặc mật khẩu email
+                        $mail->SMTPSecure = 'ssl'; // Mã hóa SSL
+                        $mail->Port = 465; // Cổng kết nối SMTP là 465
+
+                        //Recipients
+                        $mail->setFrom('nguyenhuudo1206@gmail.com', 'Nguyen Huu Do'); // Địa chỉ email và tên người gửi
+                        $mail->addAddress($data['email'], $data['name']); // Địa chỉ mail và tên người nhận
+
+                        //Content
+                        $mail->isHTML(true); // Set email format to HTML
+                        $mail->Subject = 'Ma thay doi mat khau'; // Tiêu đề
+                        $mail->Body = 'Code: ' . $result['token']; // Nội dung
+
+                        // Ẩn debug log
+                        $mail->SMTPDebug = 0; // 0: Tắt debug, 2: Hiển thị toàn bộ debug thông tin
+                        // $mail->send();
+
+                        $response->redirect('account/change_password');
+                    } catch (Exception $e) {
+                        echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+                    }
+                } else {
+                    $this->data['errors']['email'] = 'Not found!';
+                    $this->data['msg'] = "Error";
+                    $this->data['old'] = $request->getFields();
+                    $this->data['sub_content']['title'] = 'Forget';
+                    $this->data['content'] = 'forget';
+
+                    $this->render($this->data['content'], $this->data);
+                    exit();
+                }
+            }
+        } else {
+            $this->data['sub_content']['title'] = 'Forget';
+            $this->data['content'] = 'forget';
+
+            $this->render($this->data['content'], $this->data);
+        }
     }
 }

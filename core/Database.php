@@ -29,14 +29,11 @@ class Database
         }
     }
 
+
+
     function lastInsertId()
     {
         return $this->__conn->lastInsertId();
-    }
-
-    function getAuthId($email)
-    {
-        return $this->__conn->query("SELECT id FROM users WHERE 'users.email' = $email")->fetch(PDO::FETCH_ASSOC);
     }
 
     public function insert($table, $data)
@@ -73,7 +70,6 @@ class Database
         }
 
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function readWithCondition($sql = "", $conditions = [])
