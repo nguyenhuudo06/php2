@@ -29,14 +29,12 @@ class Database
         }
     }
 
-
-
     function lastInsertId()
     {
         return $this->__conn->lastInsertId();
     }
 
-    public function insert($table, $data)
+    public function insertData($table, $data)
     {
         $keys = array_keys($data);
         $fields = implode(', ', $keys);
@@ -52,7 +50,7 @@ class Database
         return $stmt->execute();
     }
 
-    public function read($table, $conditions = [])
+    public function readData($table, $conditions = [])
     {
         $sql = "SELECT * FROM $table";
 
@@ -84,52 +82,91 @@ class Database
     }
 
 
-    public function update($table, $data, $conditions)
+    // public function updateData($table, $data, $conditions)
+    // {
+    //     $updateFields = [];
+    //     foreach ($data as $key => $value) {
+    //         $updateFields[] = "$key = :$key";
+    //     }
+
+    //     $sql = "UPDATE $table SET " . implode(', ', $updateFields);
+
+    //     $whereConditions = [];
+    //     foreach ($conditions as $key => $value) {
+    //         $whereConditions[] = "$key = :where_$key";
+    //     }
+
+    //     $sql .= " WHERE " . implode(' AND ', $whereConditions);
+
+    //     $stmt = $this->__conn->prepare($sql);
+
+    //     foreach ($data as $key => $value) {
+    //         $stmt->bindValue(':' . $key, $value);
+    //     }
+
+    //     foreach ($conditions as $key => $value) {
+    //         $stmt->bindValue(':where_' . $key, $value);
+    //     }
+
+    //     // var_dump($stmt);
+    //     return $stmt->execute();
+    // }
+
+    // public function deleteData($table, $conditions)
+    // {
+    //     $sql = "DELETE FROM $table";
+
+    //     $whereConditions = [];
+    //     foreach ($conditions as $key => $value) {
+    //         $whereConditions[] = "$key = :$key";
+    //     }
+
+    //     $sql .= " WHERE " . implode(' AND ', $whereConditions);
+
+    //     $stmt = $this->__conn->prepare($sql);
+
+    //     foreach ($conditions as $key => $value) {
+    //         $stmt->bindValue(':' . $key, $value);
+    //     }
+
+    //     return $stmt->execute();
+    // }
+
+    function updateData($table, $data, $conditions = '')
     {
-        $updateFields = [];
-        foreach ($data as $key => $value) {
-            $updateFields[] = "$key = :$key";
+        if (!empty($data)) {
+            $updateStr = '';
+            foreach ($data as $key => $value) {
+                $updateStr .= "$key='$value',";
+            }
+
+            $updateStr = rtrim($updateStr, ',');
+
+            if (!empty($conditions)) {
+                $sql = "UPDATE $table SET $updateStr  WHERE $conditions";
+            } else {
+                $sql = "UPDATE $table SET $updateStr";
+            }
+
+            $status = $this->query($sql);
+            if ($status) {
+                return true;
+            }
         }
-
-        $sql = "UPDATE $table SET " . implode(', ', $updateFields);
-
-        $whereConditions = [];
-        foreach ($conditions as $key => $value) {
-            $whereConditions[] = "$key = :where_$key";
-        }
-
-        $sql .= " WHERE " . implode(' AND ', $whereConditions);
-
-        $stmt = $this->__conn->prepare($sql);
-
-        foreach ($data as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
-        }
-
-        foreach ($conditions as $key => $value) {
-            $stmt->bindValue(':where_' . $key, $value);
-        }
-
-        return $stmt->execute();
+        return false;
     }
 
-    public function delete($table, $conditions)
+    function deleteData($table, $conditions = '')
     {
-        $sql = "DELETE FROM $table";
-
-        $whereConditions = [];
-        foreach ($conditions as $key => $value) {
-            $whereConditions[] = "$key = :$key";
+        if (!empty($conditions)) {
+            $sql = 'DELETE FROM ' . $table . ' WHERE ' . $conditions;
+        } else {
+            $sql = 'DELETE FROM ' . $table;
         }
-
-        $sql .= " WHERE " . implode(' AND ', $whereConditions);
-
-        $stmt = $this->__conn->prepare($sql);
-
-        foreach ($conditions as $key => $value) {
-            $stmt->bindValue(':' . $key, $value);
+        $status = $this->query($sql);
+        if ($status) {
+            return true;
         }
-
-        return $stmt->execute();
+        return false;
     }
 }

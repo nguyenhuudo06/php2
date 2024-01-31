@@ -33,14 +33,16 @@ class Product extends Controller
         header('Content-Type: application/json');
         try{
             http_response_code(200);
-            // Dùng die không dùng retun
+            // Dùng die không dùng return
+            // Dữ liệu ajax truyền qua http( ? ), phải echo/die mới lấy được data, 
+            // return -> bug, vì giá trị của nó cần gán cho variables -> dùng
             die(json_encode([
                 'code' => 200,
                 'message' => 'success'
             ]));
         }catch (Exception $exception) {
             http_response_code(500);
-            // Dùng die không dùng retun
+            // Dùng die không dùng return
             die(json_encode([
                 'code' => 500,
                 'message' => 'false',

@@ -23,6 +23,9 @@ if (!empty($configs_dir)) {
     }
 }
 
+// Middlewares
+require_once 'core/Middlewares.php';
+
 require_once 'core/Route.php';
 require_once 'app/App.php';
 
@@ -32,6 +35,7 @@ if (!empty($configs['database'])) {
         require_once 'core/Connection.php';
         require_once 'core/QueryBuilder.php';
         require_once 'core/Database.php';
+        require_once 'core/DB.php';
     }
 }
 

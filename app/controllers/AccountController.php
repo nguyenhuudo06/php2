@@ -21,6 +21,9 @@ class Account extends Controller
         $request = new Request();
         $response = new Response();
 
+        $this->data['sub_content']['title'] = 'Login';
+        $this->data['content'] = 'login';
+
         if ($request->isPost()) {
             // Set rules
             $request->rules([
@@ -39,8 +42,6 @@ class Account extends Controller
                 $this->data['errors'] = $request->errors();
                 $this->data['msg'] = "Error";
                 $this->data['old'] = $request->getFields();
-                $this->data['sub_content']['title'] = 'Login';
-                $this->data['content'] = 'login';
 
                 $this->render($this->data['content'], $this->data);
                 exit();
@@ -59,11 +60,10 @@ class Account extends Controller
                         break;
                     }
                 }
+                $response->redirect('account/login');
+                exit();
             }
         } else {
-            $this->data['sub_content']['title'] = 'Login';
-            $this->data['content'] = 'login';
-
             $this->render($this->data['content'], $this->data);
         }
     }
@@ -74,26 +74,31 @@ class Account extends Controller
         $response = new Response();
 
         if ($request->isPost()) {
+            $userId = 1;
+
             // Set rules
             $request->rules([
                 'name' => 'required|min:8|max:50',
-                'email' => 'required|email|min:8',
+                'email' => 'required|email|min:8|unique:users:email:id='.$userId,
+                'age' => 'required|callback_check_age',
                 'password' => 'required|min:8',
-                'confirm_password' => 'required|min:8|match:password',
+                'confirm_password' => 'required|match:password',
             ]);
 
             // Set message 
             $request->message([
-                'name.required' => 'Name is required',
+                'name.required' => 'Required',
                 'name.min' => 'Name must be greater than 8 characters',
                 'name.max' => 'Name must be less than 50 characters',
-                'email.required' => 'Name must be less than 50 characters',
-                'email.email' => 'Name must be less than 50 characters',
-                'email.min' => 'Name must be greater than 8 characters',
-                'password.required' => 'Name must be less than 50 characters',
-                'password.min' => 'Name must be greater than 8 characters',
-                'confirm_password.required' => 'Name must be less than 50 characters',
-                'confirm_password.min' => 'Name must be greater than 8 characters',
+                'email.required' => 'Required',
+                'email.email' => 'Email invalid',
+                'email.min' => 'Email must be greater than 8 characters',
+                'email.unique' => 'Duplicate email',
+                'age.required' => 'Required',
+                'age.callback_check_age' => 'Age must be greater than 20',
+                'password.required' => 'Required',
+                'password.min' => 'Password must be greater than 8 characters',
+                'confirm_password.required' => 'Required',
                 'confirm_password.match' => 'Password does not match',
             ]);
 

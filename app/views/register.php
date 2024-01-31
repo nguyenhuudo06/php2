@@ -45,7 +45,7 @@
     // !empty($msg) ?? print_r($msg);
     // echo '</pre>';
     ?>
-    <section class="bg-image min-vh-100" style="background-image: url('https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp');">
+    <section class="bg-image vh-100" style="background-image: url('https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp');">
         <div class="mask d-flex align-items-center h-100 gradient-custom-3">
             <div class="container h-100">
                 <div class="row d-flex justify-content-center align-items-center h-100">
@@ -64,6 +64,11 @@
                                         <label class="form-label" for="form3Example3cg">Your Email</label>
                                         <input type="text" name="email" value="<?php echo !empty($old['email']) ? $old['email'] : false ?>" placeholder="<?php echo !empty($errors['emailError']) ? $errors['emailError'] : '' ?>" id="form3Example3cg" class="form-control form-control-lg" />
                                         <?php echo (!empty($errors) && array_key_exists('email', $errors)) ? '<span class="text-danger">'. $errors['email'] . '</span>' : ''; ?>
+                                    </div>
+                                    <div class="form-outline mb-4">
+                                        <label class="form-label" for="form3Example3cg">Age</label>
+                                        <input type="text" name="age" value="<?php echo !empty($old['age']) ? $old['age'] : false ?>" class="form-control form-control-lg" />
+                                        <?php echo (!empty($errors) && array_key_exists('age', $errors)) ? '<span class="text-danger">'. $errors['age'] . '</span>' : ''; ?>
                                     </div>
                                     <div class="form-outline mb-4">
                                         <label class="form-label" for="form3Example4cg">Password</label>

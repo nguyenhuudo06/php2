@@ -2,7 +2,7 @@
 
 class App
 {
-    private $__controller, $__action, $__params, $__routes;
+    private $__controller, $__action, $__params, $__routes, $__db;
     static public $app;
 
     function __construct()
@@ -18,6 +18,11 @@ class App
         }
         $this->__action = 'index';
         $this->__params = [];
+
+        if(class_exists('DB')){
+            $dbObject = new DB();
+            $this->__db = $dbObject->db;
+        }
 
         $this->handleUrl();
     }
@@ -82,6 +87,10 @@ class App
             if (class_exists($this->__controller)) {
                 $this->__controller = new $this->__controller();
                 unset($urlArr[0]);
+
+                if(!empty($this->__db)){
+                    $this->__controller->db = $this->__db;
+                }
             } else {
                 $this->loadError();
             }

@@ -4,10 +4,15 @@ class Request
 {
 
     // 1. Method
-    // 2. Body
+    // 2. Body 
 
-    private $__rules = [], $__messages = [];
-    public $__errors = [];
+    private $__rules = [], $__messages = [], $__errors = [];
+    public $db;
+
+    function __construct()
+    {
+        $this->db = new Database();
+    }
 
     public function getMethod()
     {
@@ -70,7 +75,7 @@ class Request
         $this->__rules = $rules;
     }
 
-    // Set message
+    // Set message, description
     public function message($message = [])
     {
         $this->__messages = $message;
@@ -101,39 +106,76 @@ class Request
                         $ruleValue = end($rulesArr);
                     }
 
-                    if($ruleName == 'required'){
-                        if(empty(trim($datafields[$fieldName]))){
+                    if ($ruleName == 'required') {
+                        if (empty(trim($datafields[$fieldName]))) {
                             $this->setErrors($fieldName, $ruleName);
                             $checkValidate = false;
                         }
                     }
 
-                    if($ruleName == 'min'){
-                        if(strlen(trim($datafields[$fieldName])) < $ruleValue){
+                    if ($ruleName == 'min') {
+                        if (strlen(trim($datafields[$fieldName])) < $ruleValue) {
                             $this->setErrors($fieldName, $ruleName);
                             $checkValidate = false;
                         }
                     }
 
-                    if($ruleName == 'max'){
-                        if(strlen(trim($datafields[$fieldName])) > $ruleValue){
+                    if ($ruleName == 'max') {
+                        if (strlen(trim($datafields[$fieldName])) > $ruleValue) {
                             $this->setErrors($fieldName, $ruleName);
                             $checkValidate = false;
                         }
                     }
 
-                    if($ruleName == 'email'){
-                        if(!filter_var(trim($datafields[$fieldName]), FILTER_VALIDATE_EMAIL)){
+                    if ($ruleName == 'email') {
+                        if (!filter_var(trim($datafields[$fieldName]), FILTER_VALIDATE_EMAIL)) {
                             $this->setErrors($fieldName, $ruleName);
                             $checkValidate = false;
                         }
                     }
 
-                    if($ruleName == 'match'){
-                        if(trim($datafields[$fieldName]) != trim($datafields[$ruleValue])){
+                    if ($ruleName == 'match') {
+                        if (trim($datafields[$fieldName]) != trim($datafields[$ruleValue])) {
                             $this->setErrors($fieldName, $ruleName);
                             $checkValidate = false;
                         }
+                    }
+
+                    if ($ruleName == 'unique') {
+                        $tableName = null;
+                        $fieldCheck = null;
+                        // echo '<pre>';
+                        // print_r($rulesArr);
+                        // echo '</pre>';
+
+                        if (!empty($rulesArr[1])) {
+                            $tableName = $rulesArr[1];
+                        }
+                        if (!empty($rulesArr[2])) {
+                            $fieldCheck = $rulesArr[2];
+                        }
+
+                        if (!empty($tableName) && !empty($fieldCheck)) {
+                            if (count($rulesArr) == 3) {
+                                $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$datafields[$fieldName]'")->rowCount();
+                            } else if (count($rulesArr) == 4) { // Trường hợp update bị trùng với chính mình
+                                if (!empty($rulesArr[3]) && preg_match('~.+?\=.+?~is', $rulesArr[3])) {
+                                    $conditionWhere = $rulesArr[3];
+                                    $conditionWhere = str_replace('=', '<>', $conditionWhere);
+                                    $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$datafields[$fieldName]' AND $conditionWhere")->rowCount();
+                                }
+                            }
+                            if (!empty($checkExit)) {
+                                $this->setErrors($fieldName, $ruleName);
+                                $checkValidate = false;
+                            }
+                        }
+                    }
+                    // Callback validate
+                    if (preg_match('~^callback_(.+)~is', $ruleName, $callbackArr)) {
+                        echo '<pre>';
+                        print_r($callbackArr);
+                        echo '</pre>';
                     }
                 }
             }
@@ -142,13 +184,18 @@ class Request
         return $checkValidate;
     }
 
-    // Errors
-    public function errors($fieldName='')
+    public function check_age($age)
     {
-        if(!empty($this->__errors)){
-            if(empty($fieldName)){
+        return $age >= 20 ? true : false;
+    }
+
+    // Errors
+    public function errors($fieldName = '')
+    {
+        if (!empty($this->__errors)) {
+            if (empty($fieldName)) {
                 $errorsArr = [];
-                foreach($this->__errors as $key => $error){
+                foreach ($this->__errors as $key => $error) {
                     $errorsArr[$key] = reset($error);
                 }
                 return $errorsArr;
@@ -160,6 +207,6 @@ class Request
     // Set error
     public function setErrors($fieldName, $ruleName)
     {
-        $this->__errors[$fieldName][$ruleName] = $this->__messages[$fieldName.'.'.$ruleName];
+        $this->__errors[$fieldName][$ruleName] = $this->__messages[$fieldName . '.' . $ruleName];
     }
 }

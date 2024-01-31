@@ -23,23 +23,24 @@ class Home extends Controller
 
     function list_product()
     {
-        $detail = $this->model->getList()->fetchAll(PDO::FETCH_ASSOC);
+        $data = [
+            'name' => '12345',
+            'email' => 'conco144@gmail.com',
+            'password' => '12344555',
+        ];
+        echo $this->model->deleteUser(10);
+        
         $title = 'Trang chu';
-
         $this->data['sub_content']['title'] = $title;
-        $this->data['sub_content']['product_list'] = $detail;
+        // $this->data['sub_content']['product_list'] = $detail;
         $this->data['content'] = 'home/index';
-
-        echo '<pre>';
-        print_r($detail);
-        echo '</pre>';
 
         // $this->render('layouts/client_layout', $this->data);
     }
 
     function getListProduct()
     {
-        $data = $this->model->ttt();
+        $data = $this->db->table('users')->get();
         echo '<pre>';
         print_r($data);
         echo '</pre>';
