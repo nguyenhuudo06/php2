@@ -8,10 +8,7 @@ class Route {
 
         unset($routes['default_controller']);
 
-        // echo '<pre>';
-        // print_r($routes);
-        // echo '</pre>';
-
+        // Loại bỏ dấu '/' ở đầu và cuối URL
         $url = trim($url, '/');
         if(empty($url)){
             $url = '/';
@@ -20,8 +17,9 @@ class Route {
         $handleUrl = $url;
         if(!empty($routes)){
             foreach($routes as $key => $value){
+                // Kiểm tra xem URL khớp với mẫu định tuyến nào
                 if(preg_match('~' . $key . '~is', $url)){
-                    $handleUrl = preg_replace('~' . $key . '~is', $value, $url);
+                    $handleUrl = preg_replace('~' . $key . '~is', $value, $url); // Thay $value vào $url -> gán vào $handleUrl
                 }
             }
         }

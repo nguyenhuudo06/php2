@@ -25,47 +25,33 @@ class HomeModel extends Model
     // Theo Core Database + QueryBuilder: Xây dựng query (Method của QueryBuilder) - Dùng thông qua $this->db (Thuộc tính của Core Model)
     // Trực tiếp theo các hàm thiết đặt ở trên: Dùng theo cấu hình trực tiếp của model tương ứng - gọi trực tiếp
 
-    function getList()
+    function index()
     {
-        $data = $this->db->query("SELECT * FROM products");
+        $data = $this->db->query("SELECT p.*, c.name AS category_name FROM products p INNER JOIN categories c ON p.categories_id = c.id ORDER BY id DESC");
         return $data;
     }
 
-    function ttt()
+    function mostViews()
     {
-        // $data= $this->db->table('products')->select('id, name, price')->where('id', '>', 3)->where('name', 'LIKE', '%no%')->orderBy('id', 'ASC')->limit(0, 5)->get();
-        // $data = $this->db->orderBy('id', 'DESC');
-        // $data = $this->db->orderBy('id DESC , name DESC');
-        $data = $this->db
-            ->table('products')
-            ->select('products.id as p_id, categories.id as c_id')
-            ->join('categories', 'products.category_id=categories.id')
-            ->get();
-
+        $data = $this->db->query("SELECT p.*, c.name AS category_name FROM products p INNER JOIN categories c ON p.categories_id = c.id ORDER BY views DESC");
         return $data;
     }
 
-    function insertUser($data)
+    function lessCommon()
     {
-        $this->db
-            ->table('users')
-            ->insert($data);
-        return $this->db->lastId();
+        $data = $this->db->query("SELECT p.*, c.name AS category_name FROM products p INNER JOIN categories c ON p.categories_id = c.id ORDER BY quantity DESC");
+        return $data;
     }
 
-    function updateUser($id, $data)
+    function getCategory($id = 1)
     {
-        $this->db
-            ->table('users')
-            ->where('id', '=', $id)
-            ->update($data);
-    }
+        $data = [];
+        $categories = $this->db->query("SELECT * FROM categories WHERE home = " . $id);
 
-    function deleteUser($id)
-    {
-        $this->db
-            ->table('users')
-            ->where('id', '=', $id)
-            ->delete();
+        foreach ($categories as $category){
+            $data[$category['name']] = $this->db->query("SELECT * FROM products WHERE categories_id = " . $category['id']);
+        }
+        
+        return $data;
     }
 }

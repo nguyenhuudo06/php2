@@ -14,6 +14,7 @@ class Request
         $this->db = new Database();
     }
 
+    // Hàm kiểm tra phương thức post/get
     public function getMethod()
     {
         return strtolower($_SERVER['REQUEST_METHOD']);
@@ -35,7 +36,8 @@ class Request
         return false;
     }
 
-    public function getFields()
+    // Lấy dữ liệu các trường
+    public function getDataFields()
     {
 
         $dataFields = [];
@@ -66,6 +68,34 @@ class Request
             }
         }
 
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $key => $value) {
+                if (is_array($value['error'])) {
+                    $check = true;
+                    foreach ($value['error'] as $key1 => $value1) {
+                        if ($value1  == UPLOAD_ERR_OK) {
+                            $check = true;
+                        } else {
+                            $check = false;
+                            break;
+                        }
+                    }
+                    if ($check) {
+                        $dataFields[$key] = $value['tmp_name'];
+                    } else {
+                        $dataFields[$key] = '';
+                    }
+                } elseif ($value['error'] == UPLOAD_ERR_OK) {
+                    $dataFields[$key] = $value['tmp_name'];
+                } else {
+                    $dataFields[$key] = '';
+                }
+            }
+            // echo '<pre>' . '</br>';
+            // print_r($_FILES);
+            // echo '<pre>' . '</br>';
+        }
+
         return $dataFields;
     }
 
@@ -75,7 +105,7 @@ class Request
         $this->__rules = $rules;
     }
 
-    // Set message, description
+    // Set message of rules
     public function message($message = [])
     {
         $this->__messages = $message;
@@ -89,7 +119,11 @@ class Request
 
         if (!empty($this->__rules)) {
 
-            $datafields = $this->getFields();
+            $datafields = $this->getDataFields();
+            echo '<pre>' . '</br>';
+            print_r($datafields);
+            echo '<pre>' . '</br>';
+            // exit();
 
             foreach ($this->__rules as $fieldName => $ruleItem) {
                 $ruleItemArr = explode('|', $ruleItem);
@@ -106,10 +140,19 @@ class Request
                         $ruleValue = end($rulesArr);
                     }
 
-                    if ($ruleName == 'required') {
-                        if (empty(trim($datafields[$fieldName]))) {
-                            $this->setErrors($fieldName, $ruleName);
-                            $checkValidate = false;
+                    if (isset($datafields[$fieldName])) {
+                        if ($ruleName == 'required') {
+                            if (is_array($datafields[$fieldName])) {
+                                if (empty(($datafields[$fieldName]))) {
+                                    $this->setErrors($fieldName, $ruleName);
+                                    $checkValidate = false;
+                                }
+                            } else {
+                                if (empty(trim($datafields[$fieldName]))) {
+                                    $this->setErrors($fieldName, $ruleName);
+                                    $checkValidate = false;
+                                }
+                            }
                         }
                     }
 
@@ -144,9 +187,6 @@ class Request
                     if ($ruleName == 'unique') {
                         $tableName = null;
                         $fieldCheck = null;
-                        // echo '<pre>';
-                        // print_r($rulesArr);
-                        // echo '</pre>';
 
                         if (!empty($rulesArr[1])) {
                             $tableName = $rulesArr[1];
@@ -156,13 +196,14 @@ class Request
                         }
 
                         if (!empty($tableName) && !empty($fieldCheck)) {
+                            $condition = trim($datafields[$fieldName]);
                             if (count($rulesArr) == 3) {
-                                $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$datafields[$fieldName]'")->rowCount();
+                                $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$condition'")->rowCount();
                             } else if (count($rulesArr) == 4) { // Trường hợp update bị trùng với chính mình
                                 if (!empty($rulesArr[3]) && preg_match('~.+?\=.+?~is', $rulesArr[3])) {
                                     $conditionWhere = $rulesArr[3];
                                     $conditionWhere = str_replace('=', '<>', $conditionWhere);
-                                    $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$datafields[$fieldName]' AND $conditionWhere")->rowCount();
+                                    $checkExit = $this->db->query("SELECT $fieldCheck FROM $tableName WHERE $fieldCheck='$condition' AND $conditionWhere")->rowCount();
                                 }
                             }
                             if (!empty($checkExit)) {
@@ -171,25 +212,36 @@ class Request
                             }
                         }
                     }
+
                     // Callback validate
-                    if (preg_match('~^callback_(.+)~is', $ruleName, $callbackArr)) {
-                        echo '<pre>';
-                        print_r($callbackArr);
-                        echo '</pre>';
+                    if (!empty($datafields[$fieldName])) {
+                        if (preg_match('~^callback_(.+)~is', $ruleName, $callbackArr)) {
+                            if (!empty($callbackArr[1])) {
+                                $callbackName = $callbackArr[1];
+                                $controller = App::$app->getCurrentController();
+                                if (method_exists($controller, $callbackName)) {
+                                    $agurment = !empty($datafields[$fieldName]) && !is_array($datafields[$fieldName]) ? trim($datafields[$fieldName]) : $datafields[$fieldName];
+
+                                    $checkCallback = call_user_func_array([$controller, $callbackName], [$agurment]);
+                                    if (!$checkCallback) {
+                                        $this->setErrors($fieldName, $ruleName);
+                                        $checkValidate = false;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
+        $sessionKey = Session::isInvalid();
+        Session::flash($sessionKey . '_errors', $this->errors());
+        Session::flash($sessionKey . '_old', $this->getDataFields());
         return $checkValidate;
     }
 
-    public function check_age($age)
-    {
-        return $age >= 20 ? true : false;
-    }
-
-    // Errors
+    // Get errors
     public function errors($fieldName = '')
     {
         if (!empty($this->__errors)) {

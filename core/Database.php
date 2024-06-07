@@ -19,6 +19,29 @@ class Database
             $statement = $this->__conn->prepare($sql);
 
             $statement->execute();
+            $result = $statement->fetchAll();
+
+            return $result;
+        } catch (Exception $exception) {
+            $mess = $exception->getMessage();
+            $data['message'] = $mess;
+            App::$app->loadError('database', $data);
+            die();
+        }
+    }
+
+    function query2($sql, $params = [])
+    {
+        try {
+            $statement = $this->__conn->prepare($sql);
+
+            // Bind các tham số nếu có
+            foreach ($params as $key => &$value) {
+                $statement->bindParam($key, $value);
+            }
+
+            $statement->execute();
+            // $result = $statement->fetchAll(PDO::FETCH_ASSOC);
 
             return $statement;
         } catch (Exception $exception) {
@@ -28,6 +51,7 @@ class Database
             die();
         }
     }
+
 
     function lastInsertId()
     {
